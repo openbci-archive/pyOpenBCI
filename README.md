@@ -13,6 +13,10 @@ Using this repo provides a building block for developing with Python. The goal f
 * Performs the heavy lifting when extracting and transforming raw binary byte streams
 * Provides a base for the beginner users to use Python to process their OpenBCI data
 
+## To Do
+* Add Ganglion Aux Data
+* Add Example Scripts
+
 ## Requirements
 
 * Python 2.7 or 3.4+
