@@ -30,7 +30,7 @@ except ImportError:
 import requests
 import xmltodict
 
-from openbci.utils import ssdp
+from pyOpenBCI.utils import ssdp
 
 SAMPLE_RATE = 0  # Hz
 
