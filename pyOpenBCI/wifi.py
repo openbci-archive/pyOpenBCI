@@ -1,4 +1,4 @@
-33"""
+"""
 Core OpenBCI object for handling connections and samples from the WiFi Shield
 Note that the LIB will take care on its own to print incoming ASCII messages if any (FIXME, BTW).
 EXAMPLE USE:

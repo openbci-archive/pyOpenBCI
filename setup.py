@@ -10,7 +10,7 @@ setup(
   author = 'OpenBCI, Inc.',                   # Type in your name
   author_email = 'contact@openbci.com',      # Type in your E-Mail
   url = 'https://github.com/andreaortuno/pyOpenBCI',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.3.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.4.tar.gz',    # I explain this later on
   keywords = ['device', 'control', 'eeg', 'emg', 'ekg', 'ads1299', 'openbci', 'ganglion', 'cyton', 'wifi'],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           'numpy',
