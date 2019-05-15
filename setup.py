@@ -4,14 +4,14 @@ import sys
 setup(
   name = 'pyOpenBCI',         # How you named your package folder (MyLib)
   packages = ['pyOpenBCI'],   # Chose the same as "name"
-  version = '0.2',      # Start with a small number and increase it with every change you make
+  version = '0.3',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   package=find_packages(),
   description = 'A lib for controlling OpenBCI devices',   # Give a short description about your library
   author = 'OpenBCI, Inc.',                   # Type in your name
   author_email = 'contact@openbci.com',      # Type in your E-Mail
   url = 'https://github.com/andreaortuno/pyOpenBCI',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.2.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.3.tar.gz',    # I explain this later on
   keywords = ['device', 'control', 'eeg', 'emg', 'ekg', 'ads1299', 'openbci', 'ganglion', 'cyton', 'wifi'],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           'numpy',
