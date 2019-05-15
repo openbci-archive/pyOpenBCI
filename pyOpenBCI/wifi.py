@@ -840,7 +840,7 @@ class ParseRaw(object):
 
         sample_object.accel_data = self.get_data_array_accel(raw_data_to_sample)
 
-        sample_object.channel_data = self.get_channel_data_array(raw_data_to_sample)
+        sample_object.channels_data = self.get_channel_data_array(raw_data_to_sample)
 
         sample_object.sample_number = raw_data_to_sample.raw_data_packet[
             1
@@ -935,9 +935,9 @@ class ParseRaw(object):
         """
         daisy_sample_object = OpenBCISample()
 
-        if lower_sample_object.channel_data is not None:
-            daisy_sample_object.channel_data = lower_sample_object.channel_data + \
-                upper_sample_object.channel_data
+        if lower_sample_object.channels_data is not None:
+            daisy_sample_object.channels_data = lower_sample_object.channels_data + \
+                upper_sample_object.channels_data
 
         daisy_sample_object.sample_number = upper_sample_object.sample_number
         daisy_sample_object.id = daisy_sample_object.sample_number
@@ -1063,7 +1063,7 @@ class OpenBCISample(object):
                  accel_data=None):
         self.aux_data = aux_data if aux_data is not None else []
         self.board_time = board_time
-        self.channel_data = channel_data if aux_data is not None else []
+        self.channels_data = channel_data if aux_data is not None else []
         self.error = error
         self.id = sample_number
         self.imp_data = imp_data if aux_data is not None else []
