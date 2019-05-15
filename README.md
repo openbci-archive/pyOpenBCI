@@ -17,13 +17,13 @@ Using this repo provides a building block for developing with Python. The goal f
 
 * Python 2.7 or 3.4+
 * Currently the Cyton works on Windows, Linux, and MacOS.
-* Ganglion works on Linux only.
+* Ganglion works on Linux only (Linux VM with enabled Bluetooth works as well).
 * The WiFi shield is known to have reliability issues across different computer configurations. Using it effectively requires advanced technical skills and programming knowledge. Note that the code avaiable here has not been tested accross all platforms.
 
 ## Installation
 
 ```python
-pip install pyopenbci
+pip install -i https://test.pypi.org/simple/ pyOpenBCI
 ```
 
 ## Important notes
@@ -57,12 +57,10 @@ board = OpenBCICyton(port='/dev/ttyUSB*', daisy=True)
 #### For Ganglion:
 
 ```python
-# For Windows replace '*' with the port number
-board = OpenBCIGanglion(port='COM*', daisy=True)
-
-# For MacOS and Linux replace '*' with the port number
+# For Linux replace '*' with the mac address
 board = OpenBCIGanglion(port='/dev/ttyUSB*', daisy=True)
 ```
+If you need to find the Ganglion mac address you can use an app like [nRF connect](https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp&hl=en_US) to find the ganglion mac address.
 
 #### For Wifi Shield:
 
@@ -75,7 +73,6 @@ board = OpenBCIWifi(shield_name='OpenBCI-2254', sample_rate=200)
 Once you initialize the board you can use the commands on the OpenBCI SDKs ([Ganglion](https://docs.openbci.com/OpenBCI%20Software/06-OpenBCI_Ganglion_SDK), [Cyton](https://docs.openbci.com/OpenBCI%20Software/04-OpenBCI_Cyton_SDK), [Wifi Shield](https://docs.openbci.com/OpenBCI%20Software/08-OpenBCI_Wifi_SDK)) to send commands to the board using python (make sure your commands are strings).
 
 ```python
-
 # Write commands to the board
 board.write_command(command)
 ```
@@ -137,6 +134,24 @@ Multiply accel_G_per_count to convert the aux_data to G.
 
 ```python
 accel_G_per_count = 0.032 #G/count
+```
+
+#### For the Wifi Shield
+
+The Wifi Shield already outputs the data in Volts and the aux data in G.
+
+### Example (Print Raw Data)
+
+```python
+from openbci import OpenBCICyton
+
+def print_raw(sample):
+    print(sample.channels_data)
+
+board = OpenBCICyton(port='COM5', daisy=False)
+
+board.start_stream(print_raw)
+
 ```
 
 ### Example (Simple LSL Streamer)
