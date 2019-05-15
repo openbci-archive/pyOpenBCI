@@ -3,10 +3,9 @@ from setuptools import find_packages
 import sys
 setup(
   name = 'pyOpenBCI',         # How you named your package folder (MyLib)
-  packages = ['pyOpenBCI'],   # Chose the same as "name"
+  packages = find_packages(),   # Chose the same as "name"
   version = '0.3',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
-  package=find_packages(),
   description = 'A lib for controlling OpenBCI devices',   # Give a short description about your library
   author = 'OpenBCI, Inc.',                   # Type in your name
   author_email = 'contact@openbci.com',      # Type in your E-Mail
