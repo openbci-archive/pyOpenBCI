@@ -11,18 +11,19 @@ Using this repo provides a building block for developing with Python. The goal f
 * Allows Python users to install one module and use any board they choose
 * Provides examples of using Python to port data to other apps like lab streaming layer
 * Performs the heavy lifting when extracting and transforming raw binary byte streams
-* Use unit tests to ensure perfect quality of core code
+* Provides a base for the beginner users to use Python to process their OpenBCI data
 
 ## Requirements
 
 * Python 2.7 or 3.4+
-* Currently the Cyton and Wifi Shield work on Windows, Linux, and MacOS.
+* Currently the Cyton works on Windows, Linux, and MacOS.
 * Ganglion works on Linux only.
+* The WiFi shield is known to have reliability issues across different computer configurations. Using it effectively requires advanced technical skills and programming knowledge. Note that the code avaiable here has not been tested accross all platforms.
 
 ## Installation
 
 ```python
-pip install openbci
+pip install pyopenbci
 ```
 
 ## Important notes
