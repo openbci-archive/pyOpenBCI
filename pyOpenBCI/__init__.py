@@ -1,3 +1,4 @@
+import sys
 from .cyton import OpenBCICyton
 from .utils import *
 from .wifi import OpenBCIWiFi
