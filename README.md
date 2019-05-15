@@ -147,7 +147,7 @@ The Wifi Shield already outputs the data in Volts and the aux data in G.
 ### Example (Print Raw Data)
 
 ```python
-from openbci import OpenBCICyton
+from pyOpenBCI import OpenBCICyton
 
 def print_raw(sample):
     print(sample.channels_data)
@@ -161,7 +161,7 @@ board.start_stream(print_raw)
 ### Example (Simple LSL Streamer)
 ```python
 
-from openbci import OpenBCICyton
+from pyOpenBCI import OpenBCICyton
 from pylsl import StreamInfo, StreamOutlet
 import numpy as np
 
