@@ -15,8 +15,6 @@ Using this repo provides a building block for developing with Python. The goal f
 
 ## To Do
 * Add Ganglion Aux Data
-* Add Example Scripts
-* Add more comments to the code
 
 ## Requirements
 
