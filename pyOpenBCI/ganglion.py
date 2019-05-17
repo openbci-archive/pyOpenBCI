@@ -43,10 +43,11 @@ class OpenBCIGanglion(object):
         self.connect()
 
     def write_command(self, command):
+        """Sends string command to the Ganglion board."""
         self.char_write.write(str.encode(command))
 
     def connect(self):
-
+        """Establishes connection with the specified Ganglion board."""
         self.ganglion = Peripheral(self.mac_address, 'random')
 
         self.service = self.ganglion.getServiceByUUID(BLE_SERVICE)
@@ -71,6 +72,7 @@ class OpenBCIGanglion(object):
         print("Connection established")
 
     def disconnect(self):
+        """Disconnets from the Ganglion board."""
         if self.streaming:
             self.stop_stream()
 
@@ -78,6 +80,7 @@ class OpenBCIGanglion(object):
         self.ganglion.disconnect()
 
     def find_mac(self):
+        """Finds and returns the mac address of the first Ganglion board found"""
         scanner = Scanner()
         devices = scanner.scan(5)
 
@@ -95,15 +98,16 @@ class OpenBCIGanglion(object):
         if len(gang_macs) < 1:
             raise OSError('Cannot find OpenBCI Ganglion Mac address.')
         else:
-            print(gang_macs)
+            print("Connecting to Ganglion with mac address: "+ gang_macs[0])
             return gang_macs[0]
 
     def stop_stream(self):
+        """Stops Ganglion Stream."""
         self.streaming = False
         self.write_command('s')
 
     def start_stream(self, callback):
-
+        """Start handling streaming data from the Ganglion board. Call a provided callback for every single sample that is processed."""
         if not self.streaming:
             self.streaming = True
             self.dropped_packets = 0
@@ -129,6 +133,8 @@ class OpenBCIGanglion(object):
 
 
 class GanglionDelegate(DefaultDelegate):
+    """ Delegate Object used by bluepy. Parses the Ganglion Data to return an OpenBCISample object.
+    """
     def __init__(self, max_packets_skipped=15):
 
         DefaultDelegate.__init__(self)
@@ -139,11 +145,13 @@ class GanglionDelegate(DefaultDelegate):
         self.start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
     def handleNotification(self, cHandle, data):
+        """Called when data is received. It parses the raw data from the Ganglion and returns an OpenBCISample object"""
         if len(data) < 1:
             warnings.warn('A packet should at least hold one byte...')
         self.parse_raw(data)
 
     def parse_raw(self, raw_data):
+        """Parses the data from the Cyton board into an OpenBCISample object."""
         if type(raw_data) == str:
             data = struct.unpack(str(len(packet)) + 'B', "".join(packet))
         else:
@@ -198,18 +206,20 @@ class GanglionDelegate(DefaultDelegate):
         # self.push_sample(data)
 
     def push_sample(self, data):
-        # print(data)
+        """Creates a stack with the last ganglion Samples"""
         for data_arr in data:
             if len(data_arr) == 5:
                 sample = OpenBCISample(data_arr[0], data_arr[1:], [], self.start_time, 'Ganglion')
                 self.samples.append(sample)
 
     def getSamples(self):
+        """Returns the last OpenBCI Samples in the stack"""
         old_samples = self.samples
         self.samples = []
         return old_samples
 
     def checked_dropped(self, num):
+        """Checks dropped packets"""
         if num not in [206, 207]:
             if self.last_id == 0 and num not in [1, 101]:
                 if num > 100:
@@ -229,13 +239,22 @@ class GanglionDelegate(DefaultDelegate):
             self.last_id = num
 
     def decompress_signed(self, bit_array):
+        """Used to decrompress signed bit arrays."""
         result = bit_array.int
         if bit_array.endswith('0b1'):
             result -= 1
         return result
 
 class OpenBCISample():
+    """ Object that encapsulates a single sample from the OpenBCI board.
 
+    Attributes:
+        id: An int representing the packet id of the aquired sample.
+        channels_data: An array with the data from the board channels.
+        aux_data: An array with the aux data from the board.
+        start_time: A string with the stream start time.
+        board_type: A string specifying the board type, e.g 'cyton', 'daisy', 'ganglion'
+    """
     def __init__(self, packet_id, channels_data, aux_data, init_time, board_type):
         self.id = packet_id
         self.channels_data = channels_data
