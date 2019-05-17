@@ -65,7 +65,7 @@ board = OpenBCICyton(port='/dev/ttyUSB*', daisy=True)
 # For Linux replace '*' with the mac address.
 board = OpenBCIGanglion(mac='*')
 ```
-If you need to find the Ganglion mac address you can use an app like [nRF connect](https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp&hl=en_US) to find the ganglion.
+If you need to find the Ganglion mac address you can use an app like [nRF connect](https://play.google.com/store/apps/details?id=no.nordicsemi.android.mcp&hl=en_US) to find the ganglion. Otherwise you can leave the mac address as None, and the function find_mac() will run (NOTE: You will need to run the script with sudo for this function to work).
 
 #### For Wifi Shield:
 
