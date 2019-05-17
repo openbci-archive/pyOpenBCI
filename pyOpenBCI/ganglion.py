@@ -1,4 +1,4 @@
-from bluepy.btle import DefaultDelegate, Peripheral
+from bluepy.btle import DefaultDelegate, Peripheral, Scanner
 import atexit
 import sys
 import warnings
@@ -19,14 +19,23 @@ BLE_CHAR_RECEIVE = "2d30c082f39f4ce6923f3484ea480596"
 BLE_CHAR_SEND = "2d30c083f39f4ce6923f3484ea480596"
 BLE_CHAR_DISCONNECT = "2d30c084f39f4ce6923f3484ea480596"
 
-class OpenBCIGanglion():
+class OpenBCIGanglion(Object):
+    """ OpenBCIGanglion handles the connection to an OpenBCI Ganglion board.
 
-    def __init__(self, mac=None, max_dropped=15):
+    The OpenBCIGanglion class interfaces with the Cyton Dongle and the Cyton board to parse the data received and output it to Python as a OpenBCISample object.
+
+    Args:
+        mac: A string representing the Ganglion board mac address. It should be a string comprising six hex bytes separated by colons, e.g. "11:22:33:ab:cd:ed". If no mac address specified, a connection will be stablished with the first Ganglion found (Will need root privilages).
+
+        max_packets_skipped: An integer specifying how many packets can be dropped before attempting to reconnect.
+    """
+    def __init__(self, mac=None, max_packets_skipped=15):
         if not mac:
             sys.exit('You need a Mac Address to find the Ganglion.')
+            self.find_mac()
         else:
             self.mac_address = mac
-        self.max_dropped = max_dropped
+        self.max_packets_skipped = max_packets_skipped
         self.streaming = False
         self.board_type = 'Ganglion'
 
@@ -49,7 +58,7 @@ class OpenBCIGanglion():
 
         self.char_discon = self.service.getCharacteristics(BLE_CHAR_DISCONNECT)[0]
 
-        self.ble_delegate = GanglionDelegate(self.max_dropped)
+        self.ble_delegate = GanglionDelegate(self.max_packets_skipped)
         self.ganglion.setDelegate(self.ble_delegate)
 
         self.desc_notify = self.char_read.getDescriptors(forUUID=0x2902)[0]
@@ -58,6 +67,7 @@ class OpenBCIGanglion():
             self.desc_notify.write(b"\x01")
         except Exception as e:
             print("Something went wrong while trying to enable notification: " + str(e))
+            sys.exit(2)
 
         print("Connection established")
 
@@ -67,6 +77,26 @@ class OpenBCIGanglion():
 
         self.char_discon.write(b' ')
         self.ganglion.disconnect()
+
+    def self.find_mac(self):
+        scanner = Scanner()
+        devices = scanner.scan(5)
+
+        if len(devices) < 1:
+            raise OSError('No nearby Devices found. Make sure your Bluetooth Connection is on.')
+
+        else:
+            gang_macs = []
+            for dev in devices:
+                for adtype, desc, value in dev.getScanData():
+                    if desc == 'Complete Local Name' and value.startswith('Ganglion'):
+                        gang_macs.append(dev.addr)
+                        print(value)
+                        
+        if len(gang_macs) < 1:
+            raise OSError('Cannot find OpenBCI Ganglion Mac address.')
+        else:
+            return list_mac[0]
 
     def stop_stream(self):
         self.streaming = False
@@ -99,10 +129,10 @@ class OpenBCIGanglion():
 
 
 class GanglionDelegate(DefaultDelegate):
-    def __init__(self, max_dropped=15):
+    def __init__(self, max_packets_skipped=15):
 
         DefaultDelegate.__init__(self)
-        self.max_dropped = max_dropped
+        self.max_packets_skipped = max_packets_skipped
         self.last_values = [0, 0, 0, 0]
         self.last_id = -1
         self.samples = []
@@ -138,7 +168,6 @@ class GanglionDelegate(DefaultDelegate):
 
         elif start_byte >=1 and start_byte <=100:
             for byte in raw_data[1:-1]:
-
                 bit_array.append('0b{0:08b}'.format(byte))
                 deltas = []
                 for sub_array in bit_array.cut(18):
@@ -150,7 +179,7 @@ class GanglionDelegate(DefaultDelegate):
                     self.last_values1 = self.last_values - delta1
                     self.last_values = self.last_values1 - delta2
 
-                    self.push_sample( [self.last_values1, self.last_values])
+                    self.push_sample([self.last_values1, self.last_values])
 
         elif start_byte >=101 and start_byte <=200:
                 for byte in raw_data[1:]:
@@ -164,7 +193,7 @@ class GanglionDelegate(DefaultDelegate):
                 # print(self.last_values1)
                 self.last_values = self.last_values1 - delta2
                 # print(self.last_values)
-                self.push_sample( [np.append(start_byte,self.last_values1), np.append(start_byte,self.last_values)])
+                self.push_sample([np.append(start_byte,self.last_values1), np.append(start_byte,self.last_values)])
 
         # self.push_sample(data)
 
@@ -194,7 +223,7 @@ class GanglionDelegate(DefaultDelegate):
             else:
                 dropped = abs(self.last_id - num)
 
-            if dropped > self.max_dropped:
+            if dropped > self.max_packets_skipped:
                 print("Dropped %d packets...." % dropped)
 
             self.last_id = num

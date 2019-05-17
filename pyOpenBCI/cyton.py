@@ -1,7 +1,9 @@
-from serial import Serial
 import serial
+from serial import Serial
+
 from threading import Timer
 import time
+
 import sys
 import struct
 import numpy as np
@@ -14,13 +16,32 @@ END_BYTE = 0xC0  # end of data packet
 
 
 
-class OpenBCICyton():
+class OpenBCICyton(object):
+    """ OpenBCICyton handles the connection to an OpenBCI Cyton board.
 
-    def __init__(self, daisy=False, port=None, baud=115200, timeout=None):
+    The OpenBCICyton class interfaces with the Cyton Dongle and the Cyton board to parse the data received and output it to Python as a OpenBCISample object.
+
+    Args:
+        port: A string representing the COM port that the Cyton Dongle is connected to. e.g for Windows users 'COM3', for MacOS or Linux users '/dev/ttyUSB1'. If no port is specified it will try to find the first port available.
+
+        daisy: A boolean indicating if there is a Daisy connected to the Cyton board.
+
+        baud: An integer specifying the baudrate of the serial connection. The maximum baudrate of the Cyton board is 115200.
+
+        timeout: An float specifying the maximum milliseconds to wait for serial data.
+
+        max_packets_skipped: An integer specifying how many packets can be dropped before attempting to reconnect.
+
+    """
+    def __init__(self, port=None, daisy=False, baud=115200, timeout=None, max_packets_skipped=10):
         self.baud = baud
         self.timeout = timeout
         self.daisy = daisy
-        self.port = port
+        self.max_packets_skipped = max_packets_skipped
+        if port:
+            self.port = port
+        else:
+            self.port = self.find_port()
         self.start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
         if self.daisy:
             self.board_type = "CytonDaisy"
@@ -49,15 +70,54 @@ class OpenBCICyton():
         atexit.register(self.disconnect)
 
     def disconnect(self):
+        """Disconnects the OpenBCI Serial."""
         if self.ser.isOpen():
             print('Closing Serial')
             self.ser.close()
 
+    def find_port(self):
+        """Finds the port to which the Cyton Dongle is connected to."""
+        # Find serial port names per OS
+        if sys.platform.startswith('win'):
+            ports = ['COM%s' % (i + 1) for i in range(256)]
+        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+            ports = glob.glob('/dev/ttyUSB*')
+        elif sys.platform.startswith('darwin'):
+            ports = glob.glob('/dev/tty.usbserial*')
+        else:
+            raise EnvironmentError('Error finding ports on your operating system')
+
+        openbci_port = ''
+        for port in ports:
+            try:
+                s = Serial(port=port, baudrate=self.baud, timeout=self.timeout)
+                s.write(b'v')
+                line = ''
+                time.sleep(2)
+                print(port)
+                if s.inWaiting():
+                    line = ''
+                    c = ''
+                    while '$$$' not in line:
+                        c = s.read().decode('utf-8', errors='replace')
+                        line += c
+                    if 'OpenBCI' in line:
+                        openbci_port = port
+                s.close()
+            except (OSError, serial.SerialException):
+                pass
+        if openbci_port == '':
+            raise OSError('Cannot find OpenBCI port')
+        else:
+            return openbci_port
+
     def stop_stream(self):
-        sefl.streaming = False
-        sefl.ser.write(b's')
+        """Stops Stream from the Cyton board."""
+        self.streaming = False
+        self.ser.write(b's')
 
     def reconnect(self):
+        """Attempts to reconnect to the Cyton board if the connection was lost."""
         self.packets_dropped = 0
         print('Reconnecting')
 
@@ -74,7 +134,8 @@ class OpenBCICyton():
         time.sleep(0.5)
         self.streaming = True
 
-    def check_connection(self, interval=2, max_packets_skipped=10):
+    def check_connection(self, interval=2, max_packets_skipped=self.max_packets_skipped):
+        """Verifies if the connection is stable. If not, it attempts to reconnect to the board"""
         if not self.streaming:
             print('Not streaming')
             return
@@ -89,9 +150,7 @@ class OpenBCICyton():
 
 
     def parse_board_data(self, maxbytes2skip=3000):
-        '''
-        Parses the data from the Cyton board into an OpenBCISample object.
-        '''
+        """Parses the data from the Cyton board into an OpenBCISample object."""
         def read_board(n):
             bb = self.ser.read(n)
             if not bb:
@@ -174,18 +233,13 @@ class OpenBCICyton():
 
 
     def write_command(self, command):
+        """Sends string command to the Cyton board"""
         self.ser.write(command.encode())
         time.sleep(0.5)
 
 
     def start_stream(self, callback):
-        '''
-        Start handling streaming data from the board. Call a provided callback for every single sample that is processed.
-
-        Args:
-            callback: A callback function that will receive a sigle argument of the OpenBCISample object captured.
-
-        '''
+        """Start handling streaming data from the board. Call a provided callback for every single sample that is processed."""
         if not self.streaming:
             self.ser.write(b'b')
             self.streaming = True
@@ -219,17 +273,20 @@ class OpenBCICyton():
 
                     sample_with_daisy = OpenBCISample(sample.id, sample.channels_data + self.last_odd_sample.channels_data, avg_aux_data, self.start_time, self.board_type)
 
-                    # if sample_with_daisy.channels_data[-1] == -1:
-                    #     print("Daisy not connected or not recognized! Make sure the daisy is properly connected to the Cyton board.\n Output switched to 8 channel only.")
-                    #
-                    #     self.daisy = False
-                    #     continue
-
                     for call in callback:
                         call(sample_with_daisy)
 
 
 class OpenBCISample():
+    """ Object that encapsulates a single sample from the OpenBCI board.
+
+    Attributes:
+        id: An int representing the packet id of the aquired sample.
+        channels_data: An array with the data from the board channels.
+        aux_data: An array with the aux data from the board.
+        start_time: A string with the stream start time.
+        board_type: A string specifying the board type, e.g 'cyton', 'daisy', 'ganglion'
+    """
 
     def __init__(self, packet_id, channels_data, aux_data, init_time, board_type):
         self.id = packet_id
