@@ -19,7 +19,7 @@ BLE_CHAR_RECEIVE = "2d30c082f39f4ce6923f3484ea480596"
 BLE_CHAR_SEND = "2d30c083f39f4ce6923f3484ea480596"
 BLE_CHAR_DISCONNECT = "2d30c084f39f4ce6923f3484ea480596"
 
-class OpenBCIGanglion(Object):
+class OpenBCIGanglion(object):
     """ OpenBCIGanglion handles the connection to an OpenBCI Ganglion board.
 
     The OpenBCIGanglion class interfaces with the Cyton Dongle and the Cyton board to parse the data received and output it to Python as a OpenBCISample object.
@@ -31,8 +31,7 @@ class OpenBCIGanglion(Object):
     """
     def __init__(self, mac=None, max_packets_skipped=15):
         if not mac:
-            sys.exit('You need a Mac Address to find the Ganglion.')
-            self.find_mac()
+            self.mac_address = self.find_mac()
         else:
             self.mac_address = mac
         self.max_packets_skipped = max_packets_skipped
@@ -78,7 +77,7 @@ class OpenBCIGanglion(Object):
         self.char_discon.write(b' ')
         self.ganglion.disconnect()
 
-    def self.find_mac(self):
+    def find_mac(self):
         scanner = Scanner()
         devices = scanner.scan(5)
 
@@ -92,11 +91,12 @@ class OpenBCIGanglion(Object):
                     if desc == 'Complete Local Name' and value.startswith('Ganglion'):
                         gang_macs.append(dev.addr)
                         print(value)
-                        
+
         if len(gang_macs) < 1:
             raise OSError('Cannot find OpenBCI Ganglion Mac address.')
         else:
-            return list_mac[0]
+            print(gang_macs)
+            return gang_macs[0]
 
     def stop_stream(self):
         self.streaming = False
