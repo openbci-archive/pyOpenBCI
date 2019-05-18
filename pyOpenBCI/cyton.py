@@ -134,7 +134,7 @@ class OpenBCICyton(object):
         time.sleep(0.5)
         self.streaming = True
 
-    def check_connection(self, interval=2, max_packets_skipped=self.max_packets_skipped):
+    def check_connection(self, interval=2, max_packets_skipped=10):
         """Verifies if the connection is stable. If not, it attempts to reconnect to the board"""
         if not self.streaming:
             print('Not streaming')
