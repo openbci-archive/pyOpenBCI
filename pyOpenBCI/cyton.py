@@ -33,7 +33,7 @@ class OpenBCICyton(object):
         max_packets_skipped: An integer specifying how many packets can be dropped before attempting to reconnect.
 
     """
-    def __init__(self, port=None, daisy=False, baud=115200, timeout=None, max_packets_skipped=None):
+    def __init__(self, port=None, daisy=False, baud=115200, timeout=None, max_packets_skipped=1):
         self.baud = baud
         self.timeout = timeout
         self.daisy = daisy
@@ -134,7 +134,7 @@ class OpenBCICyton(object):
         time.sleep(0.5)
         self.streaming = True
 
-    def check_connection(self, max_packets_skipped=0, interval=2):
+    def check_connection(self, max_packets_skipped=1, interval=2):
         """Verifies if the connection is stable. If not, it attempts to reconnect to the board"""
         if not self.streaming:
             print('Not streaming')
