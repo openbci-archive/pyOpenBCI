@@ -9,6 +9,7 @@ import struct
 import numpy as np
 import atexit
 import datetime
+import glob
 # Define variables
 SAMPLE_RATE = 250.0  # Hz
 START_BYTE = 0xA0  # start of data packet
@@ -94,7 +95,6 @@ class OpenBCICyton(object):
                 s.write(b'v')
                 line = ''
                 time.sleep(2)
-                print(port)
                 if s.inWaiting():
                     line = ''
                     c = ''
@@ -107,7 +107,7 @@ class OpenBCICyton(object):
             except (OSError, serial.SerialException):
                 pass
         if openbci_port == '':
-            raise OSError('Cannot find OpenBCI port')
+            raise OSError('Cannot find OpenBCI port.')
         else:
             return openbci_port
 
