@@ -47,6 +47,8 @@ board = OpenBCICyton(port='COM*')
 board = OpenBCICyton(port='/dev/ttyUSB*')
 ```
 
+To find the COM port you are connected to you can use the OpenBCI GUI. Otherwise you can leave the port number as None, and the function find_port() will run and connect to the first Cyton Dongle it finds.
+
 #### For Cyton + Daisy:
 
 ```python
@@ -56,6 +58,8 @@ board = OpenBCICyton(port='COM*', daisy=True)
 # For MacOS and Linux replace '*' with the port number
 board = OpenBCICyton(port='/dev/ttyUSB*', daisy=True)
 ```
+
+To find the COM port you are connected to you can use the OpenBCI GUI. Otherwise you can leave the port number as None, and the function find_port() will run and connect to the first Cyton Dongle it finds.
 
 #### For Ganglion:
 
