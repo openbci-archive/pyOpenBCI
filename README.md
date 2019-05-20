@@ -4,7 +4,7 @@
   Provide a stable Python driver for all OpenBCI Biosensors
 </p>
 
-[![Build Status](https://travis-ci.org/OpenBCI/OpenBCI_Python.svg?branch=master)](https://travis-ci.org/OpenBCI/OpenBCI_Python)
+[![Build Status](https://travis-ci.org/andreaortuno/pyOpenBCI.svg?branch=master)](https://travis-ci.org/andreaortuno/pyOpenBCI)
 
 Using this repo provides a building block for developing with Python. The goal for the Python library is to ***provide a stable Python driver for all OpenBCI Biosensors***, that:
 
