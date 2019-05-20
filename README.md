@@ -24,6 +24,13 @@ Using this repo provides a building block for developing with Python. The goal f
 * The WiFi shield is known to have reliability issues across different computer configurations. Using it effectively requires advanced technical skills and programming knowledge. Note that the code avaiable here has not been tested accross all platforms.
 
 ## Installation
+First, make sure you have the necessary dependencies.
+
+```python
+pip install numpy pyserial bitstring xmltodict requests
+```
+
+Linux users may need `bluepy` also.
 
 ```python
 pip install -i https://test.pypi.org/simple/ pyOpenBCI
@@ -149,6 +156,8 @@ The Wifi Shield already outputs the data in Volts and the aux data in G.
 
 ### Example (Print Raw Data)
 
+To test this example, use `py Examples\print_raw_example.py` or `python Examples\print_raw_example.py`.
+
 ```python
 from pyOpenBCI import OpenBCICyton
 
@@ -162,6 +171,9 @@ board.start_stream(print_raw)
 ```
 
 ### Example (Simple LSL Streamer)
+
+To run this example, use `py Examples\lsl_example.py` or `python Examples\lsl_example.py`.
+
 ```python
 
 from pyOpenBCI import OpenBCICyton
