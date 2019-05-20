@@ -1,4 +1,4 @@
-# OpenBCI Python
+# pyOpenBCI
 
 <p align="center" href="">
   Provide a stable Python driver for all OpenBCI Biosensors
