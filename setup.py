@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 setup(
   name = 'pyOpenBCI',         # How you named your package folder (MyLib)
   packages = find_packages(),   # Chose the same as "name"
-  version = '0.11',      # Start with a small number and increase it with every change you make
+  version = '0.12',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'A lib for controlling OpenBCI devices',   # Give a short description about your library
   long_description=long_description,
@@ -16,13 +16,12 @@ setup(
   author = 'OpenBCI, Inc.',                   # Type in your name
   author_email = 'contact@openbci.com',      # Type in your E-Mail
   url = 'https://github.com/andreaortuno/pyOpenBCI',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.11.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.12.tar.gz',    # I explain this later on
   keywords = ['device', 'control', 'eeg', 'emg', 'ekg', 'ads1299', 'openbci', 'ganglion', 'cyton', 'wifi'],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           'numpy',
           'pyserial',
           'bitstring',
-          'urllib2',
           'xmltodict',
           'requests',
       ]+ ["bluepy >= 2.0"] if sys.platform.startswith("linux") else [],
