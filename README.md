@@ -35,7 +35,7 @@ Linux users may need `bluepy` also.
 Then you can use pip to install the OpenBCI module.
 
 ```python
-pip install -i https://test.pypi.org/simple/ pyOpenBCI
+pip install pyOpenBCI
 ```
 
 Once installed, try running the examples provided to make sure you can connect to your OpenBCI board.
