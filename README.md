@@ -36,6 +36,8 @@ Linux users may need `bluepy` also.
 pip install -i https://test.pypi.org/simple/ pyOpenBCI
 ```
 
+Once installed, try running the examples provided to make sure you can connect to your OpenBCI board.
+
 ## Important notes
 
 Currently the Ganglion board can only be used with a Linux OS. The WiFi shield is known to have reliability issues across different computer configurations. Using it effectively requires advanced technical skills and programming knowledge. Note that the code avaiable here has not been tested accross all platforms.
