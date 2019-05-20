@@ -32,6 +32,8 @@ pip install numpy pyserial bitstring xmltodict requests
 
 Linux users may need `bluepy` also.
 
+Then you can use pip to install the OpenBCI module.
+
 ```python
 pip install -i https://test.pypi.org/simple/ pyOpenBCI
 ```
