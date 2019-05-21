@@ -4,7 +4,7 @@
   Provide a stable Python driver for all OpenBCI Biosensors
 </p>
 
-This repo has been designed to be a more beginner friendly version of the [OpenBCI-Python](https://github.com/OpenBCI/OpenBCI_Python) repo. If there is anything you think we should add please open an issue.
+This repo has been designed to be a more beginner friendly version of the [OpenBCI-Python](https://github.com/OpenBCI/OpenBCI_Python) repo. If there is anything you think we should add please open an issue. The OpenBCI-Python repo is still live but it is not longer being mantained by OpenBCI.
 
 Using this repo provides a building block for developing with Python. The goal for the Python library is to ***provide a stable Python driver for all OpenBCI Biosensors***, that:
 
@@ -15,6 +15,7 @@ Using this repo provides a building block for developing with Python. The goal f
 
 ## To Do
 * Add Ganglion Aux Data
+* Add a script so send commands to the board while streaming.
 
 ## Requirements
 
