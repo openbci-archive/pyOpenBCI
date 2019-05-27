@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 setup(
   name = 'pyOpenBCI',
   packages = find_packages(),
-  version = '0.12',
+  version = '0.13',
   license='MIT',
   description = 'A lib for controlling OpenBCI devices',
   long_description=long_description,
@@ -16,7 +16,7 @@ setup(
   author = 'OpenBCI, Inc.',
   author_email = 'contact@openbci.com',
   url = 'https://github.com/andreaortuno/pyOpenBCI',
-  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.12.tar.gz',
+  download_url = 'https://github.com/andreaortuno/pyOpenBCI/archive/0.13.tar.gz',
   keywords = ['device', 'control', 'eeg', 'emg', 'ekg', 'ads1299', 'openbci', 'ganglion', 'cyton', 'wifi'],
   install_requires=[
           'numpy',
@@ -24,7 +24,7 @@ setup(
           'bitstring',
           'xmltodict',
           'requests',
-      ]+ ["bluepy >= 2.0"] if sys.platform.startswith("linux") else [],
+      ] + ["bluepy >= 1.2"] if sys.platform.startswith("linux") else [],
   classifiers=[
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
