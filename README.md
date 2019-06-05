@@ -209,12 +209,6 @@ board = OpenBCICyton(port='COM5', daisy=False)
 board.start_stream(lsl_streamers)
 
 ```
-### Who are we?
-
-The founder of the OpenBCI Python repository is Jermey Frey. The Python driver is one of the most popular repositories and has the most contributors!
-
-The contributors to these repos are people using Python mainly for their data acquisition and analytics.
-
 
 ### Get involved
 
@@ -224,14 +218,13 @@ Please note that it's very important to us that we maintain a positive and suppo
 
 ### Contact us
 
-If you want to report a problem or suggest an enhancement we'd love for you to [open an issue](../../issues) at this github repository because then we can get right on it. But you can also contact [AJ][link_aj_keller] by email (pushtheworldllc AT gmail DOT com) or on [twitter](https://twitter.com/aj-ptw).
+If you want to report a problem or suggest an enhancement we'd love for you to [open an issue](../../issues) at this github repository because then we can get right on it. 
 
 ### Find out more
 
 You might be interested in:
 
 * Purchase a [Cyton][link_shop_cyton] | [Ganglion][link_shop_ganglion] | [WiFi Shield][link_shop_wifi_shield] from [OpenBCI][link_openbci]
-* Get taught how to use OpenBCI devices by [Push The World][link_ptw] BCI Consulting
 
 And of course, you'll want to know our:
 
