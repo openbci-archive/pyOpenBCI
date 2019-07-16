@@ -39,6 +39,7 @@ class OpenBCICyton(object):
         self.timeout = timeout
         self.daisy = daisy
         self.max_packets_skipped = max_packets_skipped
+        self.streaming = False
         if port:
             self.port = port
         else:
@@ -58,11 +59,15 @@ class OpenBCICyton(object):
         time.sleep(2)
         self.ser.write(b'v')
 
+
         # wait for device to be ready
         time.sleep(1)
 
+        if port != "loop://":
+            self.print_incoming_text()
+
+
         self.packets_dropped = 0
-        self.streaming = False
         self.read_state = 0
         self.last_odd_sample = OpenBCISample(-1, [], [], self.start_time, self.board_type)  # used for daisy
 
@@ -234,8 +239,16 @@ class OpenBCICyton(object):
 
     def write_command(self, command):
         """Sends string command to the Cyton board"""
-        self.ser.write(command.encode())
-        time.sleep(0.5)
+        if command == '?':
+            self.ser.write(command.encode())
+            if self.ser.inWaiting():
+                line = ''
+                while '$$$' not in line:
+                    line += self.ser.read().decode('utf-8', errors='replace')
+                print(line)
+        else:
+            self.ser.write(command.encode())
+            time.sleep(0.5)
 
 
     def start_stream(self, callback):
@@ -275,6 +288,28 @@ class OpenBCICyton(object):
 
                     for call in callback:
                         call(sample_with_daisy)
+                        
+    def print_incoming_text(self):
+        """
+        When starting the connection, print all the debug data until
+        we get to a line with the end sequence '$$$'.
+        """
+        line = ''
+        # Wait for device to send data
+        time.sleep(1)
+
+        if self.ser.inWaiting():
+            line = ''
+            c = ''
+            # Look for end sequence $$$
+            while '$$$' not in line:
+                # we're supposed to get UTF8 text, but the board might behave otherwise
+                c = self.ser.read().decode('utf-8',
+                                           errors='replace')
+                line += c
+            print(line)
+        else:
+            self.warn("No Message")
 
 
 class OpenBCISample():
