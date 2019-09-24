@@ -142,6 +142,9 @@ class OpenBCIGanglion(object):
 class GanglionDelegate(DefaultDelegate):
     """ Delegate Object used by bluepy. Parses the Ganglion Data to return an OpenBCISample object.
     """
+
+    __boardname = 'Ganglion'
+
     def __init__(self, max_packets_skipped=15):
 
         DefaultDelegate.__init__(self)
@@ -174,8 +177,6 @@ class GanglionDelegate(DefaultDelegate):
         self.checked_dropped(start_byte)
         # print(start_byte, start_byte == 0)
 
-        samples = []
-
         if start_byte == 0:
             # uncompressed sample
             for byte in raw_data[1:13]:
@@ -188,51 +189,39 @@ class GanglionDelegate(DefaultDelegate):
                 results.append(sub_array.int)
 
             self.last_values = np.array(results)
-            # print(self.last_values)
-            samples.append(np.append(start_byte, self.last_values))
 
-        elif 1 <= start_byte <= 100:
-            # 18-bit compressed sample
-            for byte in raw_data[1:-1]:
-                bit_array.append('0b{0:08b}'.format(byte))
+            # store the sample
+            self.samples.append(
+                OpenBCISample(start_byte, self.last_values, [],
+                              self.start_time, self.__boardname))
 
-            deltas = []
-            for sub_array in bit_array.cut(18):
-                deltas.append(self.decompress_signed(sub_array))
-
-            delta1 , delta2 = np.array(deltas[:4]) , np.array(deltas[4:])
-
-            self.last_values1 = self.last_values - delta1
-            self.last_values = self.last_values1 - delta2
-
-            samples.extend([self.last_values1, self.last_values])
-
-        elif 101 <= start_byte <= 200:
-            # 19-bit compressed sample
+        elif 1 <= start_byte <= 200:
             for byte in raw_data[1:]:
                 bit_array.append('0b{0:08b}'.format(byte))
 
             deltas = []
-            for sub_array in bit_array.cut(19):
-                deltas.append(self.decompress_signed(sub_array))
+            if start_byte <= 100:
+                # 18-bit compressed sample
+                for sub_array in bit_array.cut(18):
+                    deltas.append(self.decompress_signed(sub_array))
+            else:
+                # 19-bit compressed sample
+                for sub_array in bit_array.cut(19):
+                    deltas.append(self.decompress_signed(sub_array))
 
-            delta1 , delta2 = np.array(deltas[:4]) , np.array(deltas[4:])
+            delta1, delta2 = np.array(deltas[:4]), np.array(deltas[4:])
+
             self.last_values1 = self.last_values - delta1
-            # print(self.last_values1)
             self.last_values = self.last_values1 - delta2
-            # print(self.last_values)
 
-            samples.extend([np.append(start_byte, self.last_values1),
-                              np.append(start_byte, self.last_values)])
+            # store both samples
+            self.samples.append(
+                OpenBCISample(start_byte, self.last_values1, [],
+                              self.start_time, self.__boardname))
 
-        self.push_sample(samples)
-
-    def push_sample(self, data):
-        """Creates a stack with the last ganglion Samples"""
-        for data_arr in data:
-            if len(data_arr) == 5:
-                sample = OpenBCISample(data_arr[0], data_arr[1:], [], self.start_time, 'Ganglion')
-                self.samples.append(sample)
+            self.samples.append(
+                OpenBCISample(start_byte, self.last_values, [],
+                              self.start_time, self.__boardname))
 
     def getSamples(self):
         """Returns the last OpenBCI Samples in the stack"""
