@@ -1,19 +1,18 @@
-import time
-
-from bluepy.btle import DefaultDelegate, Peripheral, Scanner
 import atexit
+import datetime
+import logging
 import sys
 import warnings
-import datetime
-from bitstring import BitArray
-import numpy as np
-import logging
 
+import numpy as np
+from bitstring import BitArray
+from bluepy.btle import DefaultDelegate, Peripheral, Scanner
 
 # TODO: Add aux data
 # TODO: Reconnecting when dropped
 
 SAMPLE_RATE = 200.0  # Hz
+DELTA_T = 1.0 / SAMPLE_RATE
 
 # service for communication, as per docs
 BLE_SERVICE = "fe84"
@@ -126,7 +125,7 @@ class OpenBCIGanglion(object):
 
         while self.streaming:
             try:
-                self.ganglion.waitForNotifications(1./SAMPLE_RATE)
+                self.ganglion.waitForNotifications(DELTA_T)
             except Exception as e:
                 self._logger.error("Something went wrong: ", e)
                 sys.exit(1)
@@ -136,7 +135,6 @@ class OpenBCIGanglion(object):
                 for sample in samples:
                     for call in callback:
                         call(sample)
-
 
 
 class GanglionDelegate(DefaultDelegate):
@@ -159,13 +157,11 @@ class GanglionDelegate(DefaultDelegate):
     def handleNotification(self, cHandle, data):
         """Called when data is received. It parses the raw data from the Ganglion and returns an OpenBCISample object"""
 
-        timestamp = time.time()
-
         if len(data) < 1:
             warnings.warn('A packet should at least hold one byte...')
-        self.parse_raw(data, timestamp)
+        self.parse_raw(data)
 
-    def parse_raw(self, raw_data, timestamp):
+    def parse_raw(self, raw_data):
         """Parses the data from the Cyton board into an OpenBCISample object."""
         if type(raw_data) == str:
             data = struct.unpack(str(len(packet)) + 'B', "".join(packet))
@@ -188,7 +184,7 @@ class GanglionDelegate(DefaultDelegate):
                 # calling ".int" interprets the value as signed 2's complement
                 results.append(sub_array.int)
 
-            self.last_values = np.array(results)
+            self.last_values = np.array(results, dtype=np.int32)
 
             # store the sample
             self.samples.append(
@@ -209,10 +205,16 @@ class GanglionDelegate(DefaultDelegate):
                 for sub_array in bit_array.cut(19):
                     deltas.append(self.decompress_signed(sub_array))
 
-            delta1, delta2 = np.array(deltas[:4]), np.array(deltas[4:])
+            delta1 = np.array(deltas[:4], dtype=np.int32)
+            delta2 = np.array(deltas[4:], dtype=np.int32)
 
             self.last_values1 = self.last_values - delta1
             self.last_values = self.last_values1 - delta2
+
+            # since compressed packets include two samples which have been
+            # processed client-side, prefer to calculate timestamp as
+            # expected timestamp with respect to the most-recent full-size
+            # packet received
 
             # store both samples
             self.samples.append(
@@ -266,7 +268,8 @@ class OpenBCISample():
         start_time: A string with the stream start time.
         board_type: A string specifying the board type, e.g 'cyton', 'daisy', 'ganglion'
     """
-    def __init__(self, packet_id, channels_data, aux_data, init_time, board_type):
+    def __init__(self, packet_id, channels_data, aux_data,
+                 init_time, board_type):
         self.id = packet_id
         self.channels_data = channels_data
         self.aux_data = aux_data
