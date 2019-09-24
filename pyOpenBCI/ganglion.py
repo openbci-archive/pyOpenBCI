@@ -1,3 +1,5 @@
+import time
+
 from bluepy.btle import DefaultDelegate, Peripheral, Scanner
 import atexit
 import sys
@@ -153,11 +155,14 @@ class GanglionDelegate(DefaultDelegate):
 
     def handleNotification(self, cHandle, data):
         """Called when data is received. It parses the raw data from the Ganglion and returns an OpenBCISample object"""
+
+        timestamp = time.time()
+
         if len(data) < 1:
             warnings.warn('A packet should at least hold one byte...')
-        self.parse_raw(data)
+        self.parse_raw(data, timestamp)
 
-    def parse_raw(self, raw_data):
+    def parse_raw(self, raw_data, timestamp):
         """Parses the data from the Cyton board into an OpenBCISample object."""
         if type(raw_data) == str:
             data = struct.unpack(str(len(packet)) + 'B', "".join(packet))
@@ -169,7 +174,10 @@ class GanglionDelegate(DefaultDelegate):
         self.checked_dropped(start_byte)
         # print(start_byte, start_byte == 0)
 
+        samples = []
+
         if start_byte == 0:
+            # uncompressed sample
             for byte in raw_data[1:13]:
                 bit_array.append('0b{0:08b}'.format(byte))
 
@@ -181,9 +189,10 @@ class GanglionDelegate(DefaultDelegate):
 
             self.last_values = np.array(results)
             # print(self.last_values)
-            self.push_sample([np.append(start_byte, self.last_values)])
+            samples.append(np.append(start_byte, self.last_values))
 
         elif 1 <= start_byte <= 100:
+            # 18-bit compressed sample
             for byte in raw_data[1:-1]:
                 bit_array.append('0b{0:08b}'.format(byte))
 
@@ -196,9 +205,10 @@ class GanglionDelegate(DefaultDelegate):
             self.last_values1 = self.last_values - delta1
             self.last_values = self.last_values1 - delta2
 
-            self.push_sample([self.last_values1, self.last_values])
+            samples.extend([self.last_values1, self.last_values])
 
         elif 101 <= start_byte <= 200:
+            # 19-bit compressed sample
             for byte in raw_data[1:]:
                 bit_array.append('0b{0:08b}'.format(byte))
 
@@ -211,10 +221,11 @@ class GanglionDelegate(DefaultDelegate):
             # print(self.last_values1)
             self.last_values = self.last_values1 - delta2
             # print(self.last_values)
-            self.push_sample([np.append(start_byte, self.last_values1),
+
+            samples.extend([np.append(start_byte, self.last_values1),
                               np.append(start_byte, self.last_values)])
 
-        # self.push_sample(data)
+        self.push_sample(samples)
 
     def push_sample(self, data):
         """Creates a stack with the last ganglion Samples"""
