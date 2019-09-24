@@ -2,3 +2,4 @@ numpy>=1.9.2
 pyserial>=2.7
 requests>=2.7.0
 xmltodict
+bitstring
