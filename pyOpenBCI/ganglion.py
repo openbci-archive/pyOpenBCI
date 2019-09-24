@@ -172,43 +172,47 @@ class GanglionDelegate(DefaultDelegate):
         if start_byte == 0:
             for byte in raw_data[1:13]:
                 bit_array.append('0b{0:08b}'.format(byte))
-                results = []
-                # and split it into 24-bit chunks here
-                for sub_array in bit_array.cut(24):
-                    # calling ".int" interprets the value as signed 2's complement
-                    results.append(sub_array.int)
-                    self.last_values = np.array(results)
-                    # print(self.last_values)
-                    self.push_sample( [np.append(start_byte, self.last_values)])
 
-        elif start_byte >=1 and start_byte <=100:
+            results = []
+            # and split it into 24-bit chunks here
+            for sub_array in bit_array.cut(24):
+                # calling ".int" interprets the value as signed 2's complement
+                results.append(sub_array.int)
+
+            self.last_values = np.array(results)
+            # print(self.last_values)
+            self.push_sample([np.append(start_byte, self.last_values)])
+
+        elif 1 <= start_byte <= 100:
             for byte in raw_data[1:-1]:
                 bit_array.append('0b{0:08b}'.format(byte))
-                deltas = []
-                for sub_array in bit_array.cut(18):
 
-                    deltas.append(self.decompress_signed(sub_array))
+            deltas = []
+            for sub_array in bit_array.cut(18):
+                deltas.append(self.decompress_signed(sub_array))
 
-                    delta1 , delta2 = np.array(deltas[:4]) , np.array(deltas[4:])
+            delta1 , delta2 = np.array(deltas[:4]) , np.array(deltas[4:])
 
-                    self.last_values1 = self.last_values - delta1
-                    self.last_values = self.last_values1 - delta2
+            self.last_values1 = self.last_values - delta1
+            self.last_values = self.last_values1 - delta2
 
-                    self.push_sample([self.last_values1, self.last_values])
+            self.push_sample([self.last_values1, self.last_values])
 
-        elif start_byte >=101 and start_byte <=200:
-                for byte in raw_data[1:]:
-                    bit_array.append('0b{0:08b}'.format(byte))
-                deltas = []
-                for sub_array in bit_array.cut(19):
-                    deltas.append(self.decompress_signed(sub_array))
+        elif 101 <= start_byte <= 200:
+            for byte in raw_data[1:]:
+                bit_array.append('0b{0:08b}'.format(byte))
 
-                delta1 , delta2 = np.array(deltas[:4]) , np.array(deltas[4:])
-                self.last_values1 = self.last_values - delta1
-                # print(self.last_values1)
-                self.last_values = self.last_values1 - delta2
-                # print(self.last_values)
-                self.push_sample([np.append(start_byte,self.last_values1), np.append(start_byte,self.last_values)])
+            deltas = []
+            for sub_array in bit_array.cut(19):
+                deltas.append(self.decompress_signed(sub_array))
+
+            delta1 , delta2 = np.array(deltas[:4]) , np.array(deltas[4:])
+            self.last_values1 = self.last_values - delta1
+            # print(self.last_values1)
+            self.last_values = self.last_values1 - delta2
+            # print(self.last_values)
+            self.push_sample([np.append(start_byte, self.last_values1),
+                              np.append(start_byte, self.last_values)])
 
         # self.push_sample(data)
 
