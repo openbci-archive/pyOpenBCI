@@ -5,6 +5,7 @@ import warnings
 import datetime
 from bitstring import BitArray
 import numpy as np
+import logging
 
 
 # TODO: Add aux data
@@ -38,6 +39,8 @@ class OpenBCIGanglion(object):
         self.streaming = False
         self.board_type = 'Ganglion'
 
+        self._logger = logging.getLogger(self.__class__.__name__)
+
         atexit.register(self.disconnect)
 
         self.connect()
@@ -66,10 +69,11 @@ class OpenBCIGanglion(object):
         try:
             self.desc_notify.write(b"\x01")
         except Exception as e:
-            print("Something went wrong while trying to enable notification: " + str(e))
+            self._logger.error(
+                "Something went wrong while trying to enable notifications:", e)
             sys.exit(2)
 
-        print("Connection established")
+        self._logger.debug("Connection established.")
 
     def disconnect(self):
         """Disconnets from the Ganglion board."""
@@ -98,7 +102,9 @@ class OpenBCIGanglion(object):
         if len(gang_macs) < 1:
             raise OSError('Cannot find OpenBCI Ganglion Mac address.')
         else:
-            print("Connecting to Ganglion with mac address: "+ gang_macs[0])
+            self._logger.info(
+                "Connecting to Ganglion with mac address: " + gang_macs[0]
+            )
             return gang_macs[0]
 
     def stop_stream(self):
@@ -120,8 +126,7 @@ class OpenBCIGanglion(object):
             try:
                 self.ganglion.waitForNotifications(1./SAMPLE_RATE)
             except Exception as e:
-                print(e)
-                print('Something went wrong')
+                self._logger.error("Something went wrong: ", e)
                 sys.exit(1)
 
             samples = self.ble_delegate.getSamples()
@@ -143,6 +148,8 @@ class GanglionDelegate(DefaultDelegate):
         self.last_id = -1
         self.samples = []
         self.start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+        self._logger = logging.getLogger(self.__class__.__name__)
 
     def handleNotification(self, cHandle, data):
         """Called when data is received. It parses the raw data from the Ganglion and returns an OpenBCISample object"""

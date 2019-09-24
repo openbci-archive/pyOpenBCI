@@ -3,7 +3,7 @@ from serial import Serial
 
 from threading import Timer
 import time
-
+import logging
 import sys
 import struct
 import numpy as np
@@ -35,6 +35,8 @@ class OpenBCICyton(object):
 
     """
     def __init__(self, port=None, daisy=False, baud=115200, timeout=None, max_packets_skipped=1):
+        self._logger = logging.getLogger(self.__class__.__name__)
+
         self.baud = baud
         self.timeout = timeout
         self.daisy = daisy
@@ -53,7 +55,7 @@ class OpenBCICyton(object):
         # Connecting to the board
         self.ser = Serial(port=self.port, baudrate=self.baud, timeout=self.timeout)
 
-        print('Serial established')
+        self._logger.info("Serial established.")
 
         # Perform a soft reset of the board
         time.sleep(2)
@@ -78,7 +80,7 @@ class OpenBCICyton(object):
     def disconnect(self):
         """Disconnects the OpenBCI Serial."""
         if self.ser.isOpen():
-            print('Closing Serial')
+            self._logger.info("Closing serial.")
             self.ser.close()
 
     def find_port(self):
@@ -124,7 +126,7 @@ class OpenBCICyton(object):
     def reconnect(self):
         """Attempts to reconnect to the Cyton board if the connection was lost."""
         self.packets_dropped = 0
-        print('Reconnecting')
+        self._logger.info("Reconnecting...")
 
         # Stop stream
         self.stop_stream()
@@ -142,7 +144,7 @@ class OpenBCICyton(object):
     def check_connection(self, max_packets_skipped=1, interval=2):
         """Verifies if the connection is stable. If not, it attempts to reconnect to the board"""
         if not self.streaming:
-            print('Not streaming')
+            self._logger.warning("Not streaming!")
             return
 
         # check number of dropped packets and reconnect if problem is too large
@@ -159,7 +161,8 @@ class OpenBCICyton(object):
         def read_board(n):
             bb = self.ser.read(n)
             if not bb:
-                print('Device appears to be stalling. Quitting...')
+                self._logger.warning("Device appears to be stalling. "
+                                     "Quitting...")
                 sys.exit()
                 raise Exception('Device Stalled')
                 sys.exit()
@@ -175,7 +178,8 @@ class OpenBCICyton(object):
 
                 if struct.unpack('B', b)[0] == START_BYTE:
                     if rep != 0:
-                        print('Skipped %d bytes before start found' % rep)
+                        self._logger.info(
+                            "Skipped %d bytes before start found" % rep)
                         rep = 0
 
                     packet_id = struct.unpack('B', read_board(1))[0]
@@ -233,7 +237,7 @@ class OpenBCICyton(object):
                     self.packets_dropped = 0
                     return sample
                 else:
-                    print("ID:<%d> <Unexpected END_BYTE found <%s> instead of <%s>" % (packet_id, val, END_BYTE))
+                    self._logger.warning("ID:<%d> <Unexpected END_BYTE found <%s> instead of <%s>" % (packet_id, val, END_BYTE))
                     self.packets_dropped = self.packets_dropped + 1
 
 
@@ -307,7 +311,7 @@ class OpenBCICyton(object):
                 c = self.ser.read().decode('utf-8',
                                            errors='replace')
                 line += c
-            print(line)
+            self._logger.debug(line)
         else:
             self.warn("No Message")
 
