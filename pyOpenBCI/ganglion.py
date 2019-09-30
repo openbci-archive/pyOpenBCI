@@ -153,6 +153,7 @@ class GanglionDelegate(DefaultDelegate):
         self.start_time = datetime.datetime.now().strftime("%Y-%m-%d_%H%M%S")
 
         self._logger = logging.getLogger(self.__class__.__name__)
+        self._wait_for_full_pkt = True
 
     def handleNotification(self, cHandle, data):
         """Called when data is received. It parses the raw data from the Ganglion and returns an OpenBCISample object"""
@@ -168,10 +169,37 @@ class GanglionDelegate(DefaultDelegate):
         else:
             data = raw_data
 
-        start_byte = raw_data[0]
         bit_array = BitArray()
-        self.checked_dropped(start_byte)
-        # print(start_byte, start_byte == 0)
+
+        start_byte = raw_data[0]
+        dropped, dummy_samples = self.check_dropped(start_byte)
+        self.last_id = start_byte
+
+        if self._wait_for_full_pkt:
+            if start_byte != 0:
+                self._logger.warning('Need to wait for next full packet...')
+                if dropped > 0:
+                    self.samples.extend(dummy_samples)
+                else:
+                    self.samples.extend([
+                        OpenBCISample(start_byte, [np.NaN] * 4, [],
+                                      self.start_time, self.__boardname),
+                        OpenBCISample(start_byte, [np.NaN] * 4, [],
+                                      self.start_time, self.__boardname)
+
+                    ])
+                return
+            else:
+                self._logger.warning('Got full packet, resuming.')
+                self._wait_for_full_pkt = False
+
+        if dropped > 0:
+            self._logger.error('Dropped %d packets! '
+                               'Need to wait for next full packet...' % dropped)
+
+            self.samples.extend(dummy_samples)
+            self._wait_for_full_pkt = True
+            return
 
         if start_byte == 0:
             # uncompressed sample
@@ -231,25 +259,26 @@ class GanglionDelegate(DefaultDelegate):
         self.samples = []
         return old_samples
 
-    def checked_dropped(self, num):
+    def check_dropped(self, num):
         """Checks dropped packets"""
-        if num not in [206, 207]:
-            if self.last_id == 0 and num not in [1, 101]:
-                if num > 100:
-                    dropped = num - 100
-                else:
-                    dropped = num
-            elif self.last_id == 0:
-                dropped = 0
-            elif self.last_id > num:
-                dropped = 100 - abs(self.last_id - num)
-            else:
-                dropped = abs(self.last_id - num)
+        dropped = 0
+        dummy_samples = []
+        if num not in [0, 206, 207]:
+            num = num if 1 <= num <= 100 else num - 100
+            dropped = (num - self.last_id) - 1
 
-            if dropped > self.max_packets_skipped:
-                print("Dropped %d packets...." % dropped)
+            # generate dummy samples
+            # generate NaN samples for the callback
+            dummy_samples = []
+            for i in range(dropped, -1, -1):
+                dummy_samples.extend([
+                    OpenBCISample(num - i, [np.NaN] * 4, [],
+                                  self.start_time, self.__boardname),
+                    OpenBCISample(num - i, [np.NaN] * 4, [],
+                                  self.start_time, self.__boardname)
 
-            self.last_id = num
+                ])
+        return dropped, dummy_samples
 
     def decompress_signed(self, bit_array):
         """Used to decrompress signed bit arrays."""
