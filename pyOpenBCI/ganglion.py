@@ -264,8 +264,13 @@ class GanglionDelegate(DefaultDelegate):
         dropped = 0
         dummy_samples = []
         if num not in [0, 206, 207]:
-            num = num if 1 <= num <= 100 else num - 100
-            dropped = (num - self.last_id) - 1
+            if self.last_id == 0:
+                if num >= 101:
+                    dropped = num - 101
+                else:
+                    dropped = num - 1
+            else:
+                dropped = (num - self.last_id) - 1
 
             # generate dummy samples
             # generate NaN samples for the callback
