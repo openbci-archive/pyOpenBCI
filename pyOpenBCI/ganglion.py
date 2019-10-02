@@ -98,8 +98,8 @@ class OpenBCIGanglion(object):
 
         self.char_write = self.service.getCharacteristics(BLE_CHAR_SEND)[0]
 
-        self.char_discon = self.service.getCharacteristics(BLE_CHAR_DISCONNECT)[
-            0]
+        self.char_discon = \
+            self.service.getCharacteristics(BLE_CHAR_DISCONNECT)[0]
 
         self.ble_delegate = GanglionDelegate(self.max_packets_skipped)
         self.ganglion.setDelegate(self.ble_delegate)
@@ -128,9 +128,13 @@ class OpenBCIGanglion(object):
         self.streaming = False
         self.write_command('s')
 
-    def start_stream(self, callback):
+    def start_stream(self, callback, accel_data_on=False):
         """Start handling streaming data from the Ganglion board. Call a
         provided callback for every single sample that is processed."""
+
+        # toggle accelerometer
+        self.write_command('n' if accel_data_on else 'N')
+
         if not self.streaming:
             self.streaming = True
             self.dropped_packets = 0
