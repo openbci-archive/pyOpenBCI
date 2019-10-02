@@ -21,16 +21,25 @@ BLE_CHAR_RECEIVE = "2d30c082f39f4ce6923f3484ea480596"
 BLE_CHAR_SEND = "2d30c083f39f4ce6923f3484ea480596"
 BLE_CHAR_DISCONNECT = "2d30c084f39f4ce6923f3484ea480596"
 
+
 class OpenBCIGanglion(object):
     """ OpenBCIGanglion handles the connection to an OpenBCI Ganglion board.
 
-    The OpenBCIGanglion class interfaces with the Cyton Dongle and the Cyton board to parse the data received and output it to Python as a OpenBCISample object.
+    The OpenBCIGanglion class interfaces with the Cyton Dongle and the Cyton
+    board to parse the data received and output it to Python as a
+    OpenBCISample object.
 
     Args:
-        mac: A string representing the Ganglion board mac address. It should be a string comprising six hex bytes separated by colons, e.g. "11:22:33:ab:cd:ed". If no mac address specified, a connection will be stablished with the first Ganglion found (Will need root privilages).
+        mac: A string representing the Ganglion board mac address. It should
+        be a string comprising six hex bytes separated by colons,
+        e.g. "11:22:33:ab:cd:ed". If no mac address specified, a connection
+        will be stablished with the first Ganglion found (Will need root
+        privilages).
 
-        max_packets_skipped: An integer specifying how many packets can be dropped before attempting to reconnect.
+        max_packets_skipped: An integer specifying how many packets can be
+        dropped before attempting to reconnect.
     """
+
     def __init__(self, mac=None, max_packets_skipped=15):
         if not mac:
             self.mac_address = self.find_mac()
@@ -60,7 +69,8 @@ class OpenBCIGanglion(object):
 
         self.char_write = self.service.getCharacteristics(BLE_CHAR_SEND)[0]
 
-        self.char_discon = self.service.getCharacteristics(BLE_CHAR_DISCONNECT)[0]
+        self.char_discon = self.service.getCharacteristics(BLE_CHAR_DISCONNECT)[
+            0]
 
         self.ble_delegate = GanglionDelegate(self.max_packets_skipped)
         self.ganglion.setDelegate(self.ble_delegate)
@@ -85,18 +95,22 @@ class OpenBCIGanglion(object):
         self.ganglion.disconnect()
 
     def find_mac(self):
-        """Finds and returns the mac address of the first Ganglion board found"""
+        """Finds and returns the mac address of the first Ganglion board
+        found"""
         scanner = Scanner()
         devices = scanner.scan(5)
 
         if len(devices) < 1:
-            raise OSError('No nearby Devices found. Make sure your Bluetooth Connection is on.')
+            raise OSError(
+                'No nearby Devices found. Make sure your Bluetooth Connection '
+                'is on.')
 
         else:
             gang_macs = []
             for dev in devices:
                 for adtype, desc, value in dev.getScanData():
-                    if desc == 'Complete Local Name' and value.startswith('Ganglion'):
+                    if desc == 'Complete Local Name' and value.startswith(
+                            'Ganglion'):
                         gang_macs.append(dev.addr)
                         print(value)
 
@@ -114,7 +128,8 @@ class OpenBCIGanglion(object):
         self.write_command('s')
 
     def start_stream(self, callback):
-        """Start handling streaming data from the Ganglion board. Call a provided callback for every single sample that is processed."""
+        """Start handling streaming data from the Ganglion board. Call a
+        provided callback for every single sample that is processed."""
         if not self.streaming:
             self.streaming = True
             self.dropped_packets = 0
@@ -138,7 +153,8 @@ class OpenBCIGanglion(object):
 
 
 class GanglionDelegate(DefaultDelegate):
-    """ Delegate Object used by bluepy. Parses the Ganglion Data to return an OpenBCISample object.
+    """ Delegate Object used by bluepy. Parses the Ganglion Data to return an
+    OpenBCISample object.
     """
 
     __boardname = 'Ganglion'
@@ -156,7 +172,8 @@ class GanglionDelegate(DefaultDelegate):
         self._wait_for_full_pkt = True
 
     def handleNotification(self, cHandle, data):
-        """Called when data is received. It parses the raw data from the Ganglion and returns an OpenBCISample object"""
+        """Called when data is received. It parses the raw data from the
+        Ganglion and returns an OpenBCISample object"""
 
         if len(data) < 1:
             warnings.warn('A packet should at least hold one byte...')
@@ -292,6 +309,7 @@ class GanglionDelegate(DefaultDelegate):
             result -= 1
         return result
 
+
 class OpenBCISample():
     """ Object that encapsulates a single sample from the OpenBCI board.
 
@@ -300,8 +318,10 @@ class OpenBCISample():
         channels_data: An array with the data from the board channels.
         aux_data: An array with the aux data from the board.
         start_time: A string with the stream start time.
-        board_type: A string specifying the board type, e.g 'cyton', 'daisy', 'ganglion'
+        board_type: A string specifying the board type, e.g 'cyton', 'daisy',
+        'ganglion'
     """
+
     def __init__(self, packet_id, channels_data, aux_data,
                  init_time, board_type):
         self.id = packet_id
