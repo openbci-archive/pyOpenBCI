@@ -120,8 +120,20 @@ class OpenBCIGanglion(object):
         if self.streaming:
             self.stop_stream()
 
-        self.char_discon.write(b' ')
-        self.ganglion.disconnect()
+        try:
+            self.char_discon.write(b' ')
+        except Exception as e:
+            # exceptions here don't really matter as we're disconnecting anyway
+            # although, it would be good to check WHY self.char_discon.write()
+            # ALWAYS throws an exception...
+            self._logger.debug(e)
+            pass
+
+        try:
+            self.ganglion.disconnect()
+        except Exception as e:
+            self._logger.debug(e)
+            pass
 
     def stop_stream(self):
         """Stops Ganglion Stream."""
