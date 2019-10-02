@@ -22,6 +22,32 @@ BLE_CHAR_SEND = "2d30c083f39f4ce6923f3484ea480596"
 BLE_CHAR_DISCONNECT = "2d30c084f39f4ce6923f3484ea480596"
 
 
+def _find_mac():
+    """Finds and returns the mac address of the first Ganglion board
+    found"""
+    scanner = Scanner()
+    devices = scanner.scan(5)
+
+    if len(devices) < 1:
+        raise OSError(
+            'No nearby Devices found. Make sure your Bluetooth Connection '
+            'is on.')
+
+    else:
+        gang_macs = []
+        for dev in devices:
+            for adtype, desc, value in dev.getScanData():
+                if desc == 'Complete Local Name' and value.startswith(
+                        'Ganglion'):
+                    gang_macs.append(dev.addr)
+                    print(value)
+
+    if len(gang_macs) < 1:
+        raise OSError('Cannot find OpenBCI Ganglion Mac address.')
+    else:
+        return gang_macs[0]
+
+
 class OpenBCIGanglion(object):
     """ OpenBCIGanglion handles the connection to an OpenBCI Ganglion board.
 
@@ -41,15 +67,18 @@ class OpenBCIGanglion(object):
     """
 
     def __init__(self, mac=None, max_packets_skipped=15):
+        self._logger = logging.getLogger(self.__class__.__name__)
+
         if not mac:
-            self.mac_address = self.find_mac()
+            self.mac_address = _find_mac()
         else:
             self.mac_address = mac
+        self._logger.debug(
+            'Connecting to Ganglion with MAC address %s' % mac)
+
         self.max_packets_skipped = max_packets_skipped
         self.streaming = False
         self.board_type = 'Ganglion'
-
-        self._logger = logging.getLogger(self.__class__.__name__)
 
         atexit.register(self.disconnect)
 
@@ -93,34 +122,6 @@ class OpenBCIGanglion(object):
 
         self.char_discon.write(b' ')
         self.ganglion.disconnect()
-
-    def find_mac(self):
-        """Finds and returns the mac address of the first Ganglion board
-        found"""
-        scanner = Scanner()
-        devices = scanner.scan(5)
-
-        if len(devices) < 1:
-            raise OSError(
-                'No nearby Devices found. Make sure your Bluetooth Connection '
-                'is on.')
-
-        else:
-            gang_macs = []
-            for dev in devices:
-                for adtype, desc, value in dev.getScanData():
-                    if desc == 'Complete Local Name' and value.startswith(
-                            'Ganglion'):
-                        gang_macs.append(dev.addr)
-                        print(value)
-
-        if len(gang_macs) < 1:
-            raise OSError('Cannot find OpenBCI Ganglion Mac address.')
-        else:
-            self._logger.info(
-                "Connecting to Ganglion with mac address: " + gang_macs[0]
-            )
-            return gang_macs[0]
 
     def stop_stream(self):
         """Stops Ganglion Stream."""
