@@ -2,6 +2,7 @@ import atexit
 import datetime
 import logging
 import sys
+import threading
 import warnings
 
 import numpy as np
@@ -77,7 +78,8 @@ class OpenBCIGanglion(object):
             'Connecting to Ganglion with MAC address %s' % mac)
 
         self.max_packets_skipped = max_packets_skipped
-        self.streaming = False
+        self._stop_streaming = threading.Event()
+        self._stop_streaming.set()
         self.board_type = 'Ganglion'
 
         atexit.register(self.disconnect)
@@ -117,7 +119,7 @@ class OpenBCIGanglion(object):
 
     def disconnect(self):
         """Disconnets from the Ganglion board."""
-        if self.streaming:
+        if not self._stop_streaming.is_set():
             self.stop_stream()
 
         try:
@@ -137,7 +139,7 @@ class OpenBCIGanglion(object):
 
     def stop_stream(self):
         """Stops Ganglion Stream."""
-        self.streaming = False
+        self._stop_streaming.set()
         self.write_command('s')
 
     def start_stream(self, callback, accel_data_on=False):
@@ -147,15 +149,15 @@ class OpenBCIGanglion(object):
         # toggle accelerometer
         self.write_command('n' if accel_data_on else 'N')
 
-        if not self.streaming:
-            self.streaming = True
+        if self._stop_streaming.is_set():
+            self._stop_streaming.clear()
             self.dropped_packets = 0
             self.write_command('b')
 
         if not isinstance(callback, list):
             callback = [callback]
 
-        while self.streaming:
+        while not self._stop_streaming.is_set():
             try:
                 self.ganglion.waitForNotifications(DELTA_T)
             except Exception as e:
